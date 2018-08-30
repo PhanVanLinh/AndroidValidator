@@ -7,7 +7,7 @@ public abstract class Rule {
         this.error = errorMessage;
     }
 
-    public abstract boolean valid(String content);
+    public abstract boolean valid(String target);
 
     public String getError() {
         return error;

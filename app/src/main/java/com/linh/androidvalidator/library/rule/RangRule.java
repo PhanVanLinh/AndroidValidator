@@ -11,8 +11,8 @@ public class RangRule extends Rule {
     }
 
     @Override
-    public boolean valid(String content) {
-        int len = content.length();
+    public boolean valid(String target) {
+        int len = target.length();
         if (min != null && len <= min) {
             return false;
         }

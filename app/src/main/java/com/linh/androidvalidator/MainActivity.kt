@@ -2,60 +2,62 @@ package com.linh.androidvalidator
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.Editable
-import android.text.TextWatcher
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
-import com.linh.androidvalidator.library.Validator
+import com.linh.androidvalidator.library.CompositeValidation
+import com.linh.androidvalidator.library.rule.CheckedRule
 import com.linh.androidvalidator.library.rule.EmptyRule
+import com.linh.androidvalidator.library.validation.CheckBoxValidation
+import com.linh.androidvalidator.library.validation.EditTextValidation
+import com.linh.androidvalidator.library.validation.ValidationError
+import com.linh.androidvalidator.library.validator.Validator
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-	private var usernameValidator = Validator()
-	private var passwordValidator = Validator()
+	private var compositeValidation = CompositeValidation()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		usernameValidator.addRule(EmptyRule("not empty"))
-				.setOnErrorListener {
-					text_username_error.text = it[0]
+		compositeValidation.add(EditTextValidation(edt_username, Validator().addRule(EmptyRule("user name error"))))
+		compositeValidation.add(EditTextValidation(edt_password, Validator().addRule(EmptyRule("password error"))))
+		compositeValidation.add(CheckBoxValidation(cb_accept, Validator().addRule(CheckedRule("please check"))))
+
+		compositeValidation.setListener(object : CompositeValidation.CompositeValidationListener {
+
+			override fun onValidationSuccess(views: MutableList<View>) {
+				for (v in views) {
+					if (v.id == R.id.edt_username) {
+						text_username_error.text = ""
+					}
+					if (v.id == R.id.edt_password) {
+						text_password_error.text = ""
+					}
+					if (v.id == R.id.cb_accept) {
+						text_cb_accept_error.text = ""
+					}
 				}
-				.setOnValidListener {
-					text_username_error.text = ""
+			}
+
+			override fun onValidationError(errors: MutableList<ValidationError>) {
+				button_verity.isEnabled = false
+				for (error in errors) {
+					if (error.view.id == R.id.edt_username) {
+						text_username_error.text = error.errorRules[0].error
+					}
+					if (error.view.id == R.id.edt_password) {
+						text_password_error.text = error.errorRules[0].error
+					}
+					if (error.view.id == R.id.cb_accept) {
+						text_cb_accept_error.text = error.errorRules[0].error
+					}
 				}
-		passwordValidator.addRule(EmptyRule("not empty"))
-				.setOnErrorListener {
-					text_password_error.text = it[0]
-				}
-				.setOnValidListener {
-					text_password_error.text = ""
-				}
-
-		edt_username.addTextChangedListener(object : TextWatcher {
-			override fun afterTextChanged(s: Editable?) {
-				validateUserName()
-				enableButton()
 			}
 
-			override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-			}
-
-			override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-			}
-		})
-
-		edt_password.addTextChangedListener(object : TextWatcher {
-			override fun afterTextChanged(s: Editable?) {
-				validatePassword()
-				enableButton()
-			}
-
-			override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-			}
-
-			override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+			override fun onAllValidationSuccess() {
+				button_verity.isEnabled = true
 			}
 		})
 
@@ -64,28 +66,11 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 
-	fun validateUserName() {
-		usernameValidator.valid(edt_username.text.toString())
-	}
-
-	fun validatePassword() {
-		passwordValidator.valid(edt_password.text.toString())
-	}
-
 	private fun handleButtonClick() {
-		if (isValidAll()) {
+		if (compositeValidation.isAllValidationSuccess) {
 			Toast.makeText(this, "succeess", Toast.LENGTH_SHORT).show()
 		} else {
-			validateUserName()
-			validatePassword()
+			compositeValidation.validateAll()
 		}
-	}
-
-	private fun enableButton() {
-		button_verity.isEnabled = isValidAll()
-	}
-
-	private fun isValidAll(): Boolean {
-		return usernameValidator.isValid && passwordValidator.isValid
 	}
 }

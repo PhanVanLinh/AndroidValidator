@@ -1,17 +1,20 @@
-package com.linh.androidvalidator.library;
+package com.linh.androidvalidator.library.validation;
 
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
-public class EditTextValidator extends Validator{
-    private EditText editText;
+import com.linh.androidvalidator.library.validator.Validator;
 
-    public EditTextValidator(EditText editText){
-        this.editText = editText;
+public class EditTextValidation extends ViewValidation {
+
+    public EditTextValidation(EditText editText, Validator validator) {
+        super(editText, validator);
+
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
 
             @Override
@@ -21,12 +24,13 @@ public class EditTextValidator extends Validator{
 
             @Override
             public void afterTextChanged(Editable s) {
-                valid(s.toString());
+                onViewDataChangeListener.onViewDataChange(view);
             }
         });
     }
 
-    public void valid(){
-        valid(editText.getText().toString());
+    @Override
+    String getValidationTarget() {
+        return String.valueOf(((EditText) view).getText());
     }
 }
